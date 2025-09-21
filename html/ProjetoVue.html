@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Lojinha do Alex</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="cabeçalho">
+        <div class="marca">Lojinha do Alex</div>
+        <nav class="acoes-topo">
+          <div class="perfil">
+            <button
+              class="botao-icone"
+              @click="toggleProfile"
+              title="Perfil do usuário"
+            >
+              <i class="fas fa-user"></i>
+            </button>
+            <div class="dropdown-perfil" v-if="profileOpen">
+              <button class="link" @click="abrirPerfil">Meu Perfil</button>
+              <button class="link" @click="fazerLogout">Sair</button>
+            </div>
+          </div>
+          <div class="carrinho">
+            <button
+              class="botao-icone"
+              aria-label="Abrir carrinho"
+              v-on:click="toggleCart"
+              :title="'Carrinho (' + totalItens + ' itens)'"
+            >
+              <i class="fas fa-shopping-cart"></i>
+              <span v-if="totalItens > 0" class="badge">{{ totalItens }}</span>
+            </button>
+
+            <div class="dropdown-carrinho" v-show="cartOpen">
+              <h3>Carrinho</h3>
+
+              <div v-if="cart.length === 0" class="vazio">Carrinho vazio</div>
+
+              <div v-else>
+                <ul class="lista-carrinho">
+                  <li v-for="item in cart" :key="item.id" class="item-carrinho">
+                    <div class="lado-esquerdo">
+                      <div class="nome-item">{{ item.nome }}</div>
+                      <div class="preco-unitario">
+                        R$ {{ item.preco.toFixed(2) }} cada
+                      </div>
+                    </div>
+
+                    <div class="lado-direito">
+                      <div class="controle-quantidade">
+                        <button class="btn-quantidade" @click="decrease(item)">
+                          -
+                        </button>
+                        <span class="quantidade">{{ item.quantidade }}</span>
+                        <button class="btn-quantidade" @click="increase(item)">
+                          +
+                        </button>
+                      </div>
+
+                      <div class="subtotal">
+                        R$ {{ (item.preco * item.quantidade).toFixed(2) }}
+                      </div>
+
+                      <button
+                        class="lixeira"
+                        @click="removeItem(item)"
+                        :title="'Remover ' + item.nome"
+                      >
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </div>
+                  </li>
+                </ul>
+
+                <div class="resumo-carrinho">
+                  <div>Total: <strong>R$ {{ total.toFixed(2) }}</strong></div>
+                </div>
+
+                <div class="acoes-carrinho">
+                  <button class="principal" @click="checkout">
+                    Concluir Compra
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      <main class="conteudo">
+        <h2>Produtos</h2>
+
+        <div class="produtos">
+          <article
+            v-for="produto in produtos"
+            :key="produto.id"
+            class="cartao-produto"
+          >
+            <div class="info-produto">
+              <h3>{{ produto.nome }}</h3>
+              <p class="preco">R$ {{ produto.preco.toFixed(2) }}</p>
+            </div>
+
+            <button class="adicionar" @click="addToCart(produto)">
+              Adicionar
+            </button>
+          </article>
+        </div>
+      </main>
+    </div>
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            produtos: [
+              { id: 1, nome: "Dipirona pra assistir aula", preco: 29.0 },
+              { id: 2, nome: "Fone pra ouvir musica no busão", preco: 150 },
+              { id: 3, nome: "Notebook pra não usar o lab", preco: 4999.0 },
+              { id: 4, nome: "baralho pra jogar truco", preco: 30.0 },
+            ],
+            cart: [],
+            cartOpen: false,
+            profileOpen: false,
+          };
+        },
+        computed: {
+          total() {
+            return this.cart.reduce(
+              (sum, it) => sum + it.preco * it.quantidade,
+              0
+            );
+          },
+          totalItens() {
+            return this.cart.reduce((sum, it) => sum + it.quantidade, 0);
+          },
+        },
+        methods: {
+          toggleCart() {
+            this.cartOpen = !this.cartOpen;
+            if (this.cartOpen) this.profileOpen = false;
+          },
+          toggleProfile() {
+            this.profileOpen = !this.profileOpen;
+            if (this.profileOpen) this.cartOpen = false;
+          },
+          abrirPerfil() {
+            alert("Tive preguiça de fazer o perfil.");
+            this.profileOpen = false;
+          },
+          fazerLogout() {
+            alert("É só dar ALT F4.");
+            this.profileOpen = false;
+          },
+          addToCart(produto) {
+            const found = this.cart.find((p) => p.id === produto.id);
+            if (found) {
+              found.quantidade++;
+            } else {
+              this.cart.push({ ...produto, quantidade: 1 });
+            }
+          },
+          increase(item) {
+            item.quantidade++;
+          },
+          decrease(item) {
+            if (item.quantidade > 1) {
+              item.quantidade--;
+            } else {
+              this.removeItem(item);
+            }
+          },
+          removeItem(item) {
+            this.cart = this.cart.filter((p) => p.id !== item.id);
+          },
+          checkout() {
+            if (this.cart.length === 0) return;
+            alert(
+              `Compra concluída! Total: R$ ${this.total.toFixed(
+                2
+              )} Ta rico hein`
+            );
+            this.cart = [];
+            this.cartOpen = false;
+          },
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
